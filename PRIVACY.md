@@ -1,7 +1,7 @@
 # Privacy Policy — Belote et Rebelote
 
 **Effective date:** 2026-05-22
-**Last updated:** 2026-05-22
+**Last updated:** 2026-06-01
 **App:** Belote et Rebelote (iOS)
 **Developer:** Pascal Peltriaux
 **Contact:** pascal@peltriaux.fr
@@ -11,8 +11,9 @@
 ## TL;DR
 
 - We collect the minimum data needed to make live multiplayer work.
-- Everything we collect comes from Apple Game Center, which you control via iOS Settings → Game Center.
-- Gameplay data (card plays, bids, scores) transits Supabase Realtime as a relay between paired players during a live match. It is **not** retained after the match ends.
+- Your identity comes from Apple Game Center, which you control via iOS Settings → Game Center.
+- Gameplay runs over Supabase. During a live match a small amount of game state is briefly stored server-side (so you can rejoin if you drop) and is deleted within 24 hours.
+- If you turn on match-availability notifications, we store your Apple push token so we can alert you when a game is forming. You can turn this off anytime.
 - We do **not** sell, share, or use any data for advertising, profiling, or cross-app tracking.
 - We do **not** use any third-party analytics, advertising, or attribution SDKs.
 
@@ -43,19 +44,32 @@ While a match is in progress, the following data transits between paired players
 - Round scores and end-of-match scores
 - Belote-Rebelote / Capot / declarations announcements
 
-Gameplay data is **only** exchanged between the 2–4 paired players in your specific match. It is **not** persisted server-side beyond the lifetime of the match.
+Gameplay data is **only** exchanged between the 2–4 paired players in your specific match. To let you **rejoin a match after a disconnect** (or to recover if the hosting player drops), the current game state is briefly stored server-side in a `room_authority` row during the match. This state, and the `room_members` rows that record which `teamPlayerID` holds which seat, are deleted automatically within 24 hours.
 
 ### 1.3 Match metadata (transient)
 
-To pair you with opponents, the app writes a short-lived row to the `rooms` table on Supabase containing:
+To pair you with opponents and manage rooms, the app writes short-lived rows to Supabase:
 
-- A random match ID (UUID)
+| Table | Contents | Retention |
+|---|---|---|
+| `rooms` | Random match ID (UUID), creator's `teamPlayerID`, game mode, status, invite code (private rooms), timestamps | Closed/abandoned rows deleted automatically within 24 hours |
+| `room_members` | Match ID + your `teamPlayerID` + seat number | Deleted within 24 hours |
+| `room_authority` | Current game state for rejoin/recovery (see §1.2) | Deleted within 24 hours |
+| `match_queue` | Transient matchmaking entry | Deleted within ~1 hour |
+
+### 1.3a Match-availability notifications (opt-in)
+
+If you turn on **Notifications** in the app (off by default; also requires the iOS notification permission), the app stores a row in a `push_subscriptions` table containing:
+
 - Your `teamPlayerID`
-- Game mode (standard / declarations / etc.)
-- Match status (open / in-progress / closed)
-- Timestamps
+- Your device's **Apple Push Notification service (APNs) token** — an Apple-issued identifier for your device used solely to deliver a push to it
+- Which game variants you want to be notified about, and your quiet-hours preference
 
-Closed match rows are deleted automatically when older than 24 hours.
+We use this **only** to send you a notification when a public online match is forming ("a Coinche game is available"). We never use it for advertising or tracking. You can turn it off anytime in the app (which removes/disables the row) or in iOS Settings → Notifications, and stale tokens are deleted automatically when Apple reports them invalid.
+
+### 1.3b "Founding player" record
+
+The first time you play an online match, we store a single row in a `founders` table containing your `teamPlayerID` and a timestamp. This records that you were an early player so we can keep online play free for you if a paid option is introduced later. It is retained until you ask us to delete it (see §4).
 
 ### 1.4 Game Center achievements + leaderboards
 
@@ -67,7 +81,7 @@ We do **not** collect, store, or transmit:
 
 - Your real name, email address, phone number, or postal address
 - Your IP address (beyond what's needed to route the live multiplayer connection — Supabase does not log this for our project)
-- Device identifiers (IDFA, IDFV, etc.)
+- Advertising or vendor identifiers (IDFA, IDFV) — the only device identifier we ever store is the optional APNs push token described in §1.3a, and only if you turn notifications on
 - Location data (precise or coarse)
 - Contacts, calendar, photos, microphone, or camera content
 - Browsing history or third-party app usage
@@ -81,7 +95,8 @@ We do **not** collect, store, or transmit:
 | Recipient | Data shared | Purpose | Their privacy policy |
 |---|---|---|---|
 | **Apple Game Center** | Your scores, achievements, sign-in state, alias | Multiplayer matchmaking infrastructure (per Apple's GameKit), leaderboards, achievements | [Apple Privacy Policy](https://www.apple.com/legal/privacy/) |
-| **Supabase, Inc.** | Match metadata + transient gameplay broadcast traffic | Real-time multiplayer transport (live data relay only) | [Supabase Privacy Policy](https://supabase.com/privacy) |
+| **Apple Push Notification service** | Your APNs token + the notification text (only if you opt in) | Deliver match-availability notifications to your device | [Apple Privacy Policy](https://www.apple.com/legal/privacy/) |
+| **Supabase, Inc.** | Match metadata, transient game state, and (if you opt in) your push token | Real-time multiplayer transport + the small server-side rows described in §1.2–§1.3b | [Supabase Privacy Policy](https://supabase.com/privacy) |
 
 We use Supabase as a "data processor" (in GDPR terms): they handle the transport on our behalf and do not use your gameplay data for their own purposes. Supabase is SOC 2 Type II compliant.
 
@@ -93,12 +108,15 @@ We do **not** share data with any other third party. There are no advertising ne
 
 | Data | Retention |
 |---|---|
-| Game Center identifiers + alias | Only in-memory during a session — re-fetched from Game Center on each app launch |
-| Active match row in Supabase `rooms` table | Lifetime of the match + at most 24 hours |
+| Game Center alias + photo | In-memory only — re-fetched from Game Center on each app launch |
+| `rooms` / `room_members` / `room_authority` rows (incl. your `teamPlayerID`) | Lifetime of the match + at most 24 hours, then auto-deleted |
+| `match_queue` matchmaking entry | At most ~1 hour |
 | Gameplay broadcast traffic | Not persisted — relayed in real time then discarded |
+| Push subscription (`teamPlayerID` + APNs token), if you opt in | Until you turn notifications off, or the token becomes invalid |
+| "Founding player" row (`teamPlayerID` + timestamp) | Until you request deletion (§4) |
 | Game Center scores / achievements | Managed by Apple per your Game Center settings |
 
-When a match ends, all gameplay data is gone. When you close the app, the in-memory session is gone.
+When a match ends, the transient match rows are cleaned up within 24 hours. The only data that persists longer is the optional push subscription (which you control) and the small founding-player record (deletable on request).
 
 ---
 
@@ -115,9 +133,9 @@ Under GDPR, CCPA, and similar laws, you have the right to:
 
 In practice, the easiest way to exercise any of these rights for our app is:
 
-1. **Sign out of Game Center** (iOS Settings → Game Center → toggle off). The app then has no identity to associate with you.
-2. **Delete the app** from your device. There's no server-side account to wind down.
-3. **Email pascal@peltriaux.fr** if any residual transient match data remains in Supabase and you want it deleted sooner than the 24-hour automatic cleanup window — we'll honour the request within 7 days.
+1. **Turn off Notifications** in the app (or iOS Settings → Notifications) to remove your push subscription, and **sign out of Game Center** (iOS Settings → Game Center) so the app has no identity to associate with you.
+2. **Delete the app** from your device. There's no password-based account to wind down.
+3. **Email pascal@peltriaux.fr** to have us delete any remaining server-side rows tied to your `teamPlayerID` — including the optional push subscription and the founding-player record, which are the only items not on the automatic 24-hour cleanup. We'll honour the request within 7 days.
 
 For Game Center data (leaderboards, achievements), use the Game Center app on your device or contact Apple — that data is theirs to manage, not ours.
 
