@@ -1,5 +1,7 @@
 # Privacy Policy — Belote et Rebelote
 
+> 🇫🇷 [Version française](./PRIVACY.fr.md)
+
 **Effective date:** 2026-05-22
 **Last updated:** 2026-06-01
 **App:** Belote et Rebelote (iOS)
