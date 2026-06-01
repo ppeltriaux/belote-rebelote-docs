@@ -4,7 +4,7 @@
 **Last updated:** 2026-06-01
 **App:** Belote et Rebelote (iOS)
 **Developer:** Pascal Peltriaux
-**Contact:** pascal@peltriaux.fr
+**Contact:** dev@peltriaux.com
 
 ---
 
@@ -17,7 +17,7 @@
 - We do **not** sell, share, or use any data for advertising, profiling, or cross-app tracking.
 - We do **not** use any third-party analytics, advertising, or attribution SDKs.
 
-If anything below is unclear, email pascal@peltriaux.fr.
+If anything below is unclear, email dev@peltriaux.com.
 
 ---
 
@@ -135,7 +135,7 @@ In practice, the easiest way to exercise any of these rights for our app is:
 
 1. **Turn off Notifications** in the app (or iOS Settings → Notifications) to remove your push subscription, and **sign out of Game Center** (iOS Settings → Game Center) so the app has no identity to associate with you.
 2. **Delete the app** from your device. There's no password-based account to wind down.
-3. **Email pascal@peltriaux.fr** to have us delete any remaining server-side rows tied to your `teamPlayerID` — including the optional push subscription and the founding-player record, which are the only items not on the automatic 24-hour cleanup. We'll honour the request within 7 days.
+3. **Email dev@peltriaux.com** to have us delete any remaining server-side rows tied to your `teamPlayerID` — including the optional push subscription and the founding-player record, which are the only items not on the automatic 24-hour cleanup. We'll honour the request within 7 days.
 
 For Game Center data (leaderboards, achievements), use the Game Center app on your device or contact Apple — that data is theirs to manage, not ours.
 
@@ -143,7 +143,7 @@ For Game Center data (leaderboards, achievements), use the Game Center app on yo
 
 ## 5. Children
 
-The app uses Apple Game Center, which requires users to be at least 13 years old in most jurisdictions (per Apple's policy). We do not knowingly collect data from anyone under 13. If you believe a child under 13 has used the app and we hold data about them, email pascal@peltriaux.fr — we will delete it on request.
+The app uses Apple Game Center, which requires users to be at least 13 years old in most jurisdictions (per Apple's policy). We do not knowingly collect data from anyone under 13. If you believe a child under 13 has used the app and we hold data about them, email dev@peltriaux.com — we will delete it on request.
 
 We do not market the app to children and do not include child-directed content beyond what's typical for a casual card game.
 
@@ -185,7 +185,7 @@ For users in the EU/EEA, you may contact your local data protection authority if
 
 ## 9. Contact
 
-Email: **pascal@peltriaux.fr**
+Email: **dev@peltriaux.com**
 
 Repository for this document: https://github.com/ppeltriaux/belote-rebelote-docs
 

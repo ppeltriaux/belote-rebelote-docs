@@ -10,4 +10,4 @@ Public documents for the **Belote et Rebelote** iOS app.
 
 - App Store listing: (to be added upon launch)
 - App development repository: [github.com/ppeltriaux/belote-rebelote](https://github.com/ppeltriaux/belote-rebelote)
-- Contact: pascal@peltriaux.fr
+- Contact: dev@peltriaux.com
